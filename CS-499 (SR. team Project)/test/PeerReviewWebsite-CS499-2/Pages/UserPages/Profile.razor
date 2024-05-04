@@ -1,0 +1,241 @@
+﻿@page "/profile/{Visiting:bool?}"
+
+@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Review
+@using PeerReviewWebsite.Pages.Components
+@using PeerReviewWebsite.Classes.Data.Account.RoleRequest
+@inject MyStateContainer state
+@inject NavigationManager UriHelper
+@inject IJSRuntime JSRuntime
+@inherits OwningComponentBase
+
+<PageTitle>Profile</PageTitle>
+
+<body>
+
+    <NavigationBar activePage=NavigationBar.Page.Profile showModeratorPage=isModerator showAuthorPage=isAuthor showReviewerPage=isReviewer showRolesPage=canEditRoles/>
+
+    @if (User.Id == state.User.Id) {
+        <h1>Hello @User.FirstName @User.LastName!</h1>
+    }
+    else {
+        <h1>@User.FirstName @User.LastName's Profile</h1>
+    }
+    <h2> Profile Page </h2>
+
+    <p>User Id: @User.Id</p>
+    <p>Email: @User.Email </p>
+
+    <!-- Show roles the user has -->
+    <p>
+        Roles:<br/>
+        @foreach ((Role role, int i) in UserRoles.Select((x, i) => (x, i))) {
+            <text>@role.Name</text>
+            @if (i < UserRoles.Count - 1) {
+                <text>, </text>
+            }
+        }
+    </p>
+
+    <!-- Role Request Section -->
+    @if (!Visiting || (Visiting && canEditRoles))
+    {
+        <div>
+            <label for="requestedRole">
+                @(Visiting && canEditRoles ? "Add Role:" : "Requested Role")
+            </label>
+            <br />
+            <select id="requestedRole" @onclick=PopulateRequestableRoles @onchange=HandleRoleSelection class="form-control" required>
+                <option value="0" selected>Select a Role</option>
+                @foreach (Role role in availableRoles)
+                {
+                    <option value=@role.Id>@role.Name</option>
+                }
+            </select>
+            <br />
+            <br />
+            <button type="button" class="btn btn-primary" @onclick=RequestRole disabled=@(selectedRole == 0)>
+                @(Visiting && canEditRoles ? "Add Role" : "Request Role")
+            </button>
+            <br />
+        </div>
+    }
+
+    @if (Visiting && canEditRoles) {
+        <br />
+        <div>
+            <label for="removingRole">Remove Role:</label>
+            <br />
+            <select id="removingRole" @onchange=HandleRemoveRoleSelection class="form-control" required>
+                <option value="0" selected>Select a Role</option>
+                @foreach (Role role in UserRoles)
+                {
+                    <option value=@role.Id>@role.Name</option>
+                }
+            </select>
+            <br />
+            <br />
+            <button type="button" class="btn btn-primary" @onclick=RemoveRole disabled=@(removingRole == 0)>Remove Role</button>
+            <br />
+        </div>
+    }
+
+    <!-- List of Role Requests -->
+    <div>
+        <h3>Requested Roles:</h3>
+        @if (requestedRoles.Any())
+        {
+            <ul>
+                @foreach (Role role in requestedRoles)
+                {
+                    <li>@role.Name</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>No role requests have been made.</p>
+        }
+    </div>
+
+
+    <!-- Delete account -->
+    @if (Visiting && canManageUsers) {
+        <br />
+        <label>
+            Delete:<br />
+            <button @onclick=DeleteUser>Delete User (BE CAREFUL!)</button>
+        </label>
+    }
+
+</body>
+
+<Footer />
+
+@code {
+    [Parameter]
+    public bool Visiting { get; set; }
+
+    private AccountService AccountService { get; set; }
+    private ReviewService ReviewService { get; set; }
+    private RequestService RequestService { get; set; }
+
+    private User User;
+    private List<Role> UserRoles = new();
+
+    private List<Role> availableRoles = new();
+    private List<Role> requestedRoles = new();
+    private int selectedRole = 0;
+    private int removingRole = 0;
+
+    private bool isModerator;
+    private bool isAuthor;
+    private bool isReviewer;
+    private bool canEditRoles;
+    private bool canManageUsers;
+    protected override async Task OnInitializedAsync()
+    {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        ReviewService = ScopedServices.GetRequiredService<ReviewService>();
+        RequestService = ScopedServices.GetRequiredService<RequestService>();
+
+        User = Visiting ? state.VisitingUser : state.User;
+
+        isModerator = await AccountService.UserIsModerator(state.User);
+        isAuthor = await AccountService.UserIsAuthor(state.User);
+        isReviewer = await AccountService.UserIsReviewer(state.User);
+        canManageUsers = await AccountService.DoesUserHavePermission(state.User, Permission.ManageUsers);
+        canEditRoles = canManageUsers || await AccountService.DoesUserHavePermission(state.User, Permission.EditRoles);
+
+        // Populate roles must go last as it checks against the roles in the other ones
+        await PopulateUserRoles();
+        await PopulateRequestedRoles();
+        await PopulateRequestableRoles();
+    }
+
+    private async Task PopulateRequestableRoles()
+    {
+        availableRoles.Clear();
+        // Don't add roles already had or already requested
+        availableRoles.AddRange((await RequestService.GetAllRoles())
+            .Where(r => !UserRoles.Any(r1 => r.Id == r1.Id) && !requestedRoles.Any(r1 => r.Id == r1.Id)));
+    }
+
+    private async Task PopulateUserRoles()
+    {
+        UserRoles.Clear();
+        UserRoles.AddRange(await AccountService.GetUserRolesAsync(User));
+    }
+
+    private async Task PopulateRequestedRoles()
+    {
+        requestedRoles.Clear();
+        requestedRoles.AddRange(await RequestService.GetRequestedRoles(state.User.Id));
+    }
+
+    private async Task RequestRole()
+    {
+        if (!Visiting) {
+            await RequestService.CreateRoleRequest(new RoleRequest
+            {
+                UserId = state.User.Id,
+                Status = RoleRequestStatus.Pending,
+                RequestedRole = selectedRole
+            });
+            await PopulateRequestedRoles();
+            await PopulateRequestableRoles();
+        } else if (canEditRoles) {
+            Role roleToAdd = await AccountService.GetRoleAsync(selectedRole);
+            User = await AccountService.AddRoleToUserAsync(User, roleToAdd);
+            await PopulateUserRoles();
+            await PopulateRequestableRoles();
+        }
+        selectedRole = 0;
+    }
+
+    private async Task RemoveRole()
+    {
+        Role roleToRemove = await AccountService.GetRoleAsync(removingRole);
+        User = await AccountService.RemoveRoleFromUser(User, roleToRemove);
+        await PopulateUserRoles();
+        await PopulateRequestableRoles();
+    }
+
+    private void HandleRoleSelection(ChangeEventArgs e)
+    {
+        selectedRole = int.Parse((string)e.Value);
+    }
+
+    private void HandleRemoveRoleSelection(ChangeEventArgs e)
+    {
+        removingRole = int.Parse((string)e.Value);
+    }
+
+    private async Task DeleteUser()
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure?\nThis will DELETE ALL of their documents and comments as well!"))
+            return;
+
+        foreach (int docId in User.OwnedDocuments) {
+            Document doc = await ReviewService.GetDocumentAsync(docId);
+            if (doc is null)
+                continue;
+
+            foreach(int commentId in doc.Comments) {
+                Comment comment = await ReviewService.GetCommentAsync(commentId);
+                if (comment is null)
+                    continue;
+
+                await AccountService.DeleteComment(comment);
+            }
+
+            await AccountService.DeleteDocument(doc);
+        }
+
+        await AccountService.DeleteUserAsync(User);
+
+        UriHelper.NavigateTo("/home");
+    }
+}

@@ -1,0 +1,46 @@
+﻿@inject NavigationManager UriHelper
+
+<ul>
+    <NavigationBarButton Class="left" Page=Page.Home ActivePage=activePage Icon="bi-house-fill" />
+    <NavigationBarButton Class="left" Page=Page.Explore ActivePage=activePage Icon="bi-search" />
+    @if (showAuthorPage)
+    {
+        <NavigationBarButton Class="left" Page=Page.Author ActivePage=activePage Icon="bi-pencil-fill" />
+    }
+    @if (showReviewerPage)
+    {
+        <NavigationBarButton Class="left" Page=Page.Reviewer ActivePage=activePage Icon="bi-patch-check-fill" />
+    }
+
+    <NavigationBarButton Class="right" Page=Page.LogOut ActivePage=activePage Icon="bi-box-arrow-right" />
+    <NavigationBarButton Class="right" Page=Page.Profile ActivePage=activePage Icon="bi-person-circle" />
+    @if (showRolesPage)
+    {
+        <NavigationBarButton Class="right" Page=Page.Roles ActivePage=activePage Icon="bi-person-lines-fill" />
+    }
+    @if (showModeratorPage)
+    {
+        <NavigationBarButton Class="right" Page=Page.Moderator ActivePage=activePage Icon="bi-chat-right-text-fill" />
+    }
+</ul>
+
+@code {
+    public enum Page
+    {
+        Home,
+        Explore,
+        Author,
+        Reviewer,
+        Moderator,
+        Roles,
+        Profile,
+        LogOut
+    }
+
+    [Parameter] public Page activePage { get; set; }
+
+    [Parameter] public bool showModeratorPage { get; set; }
+    [Parameter] public bool showAuthorPage { get; set; }
+    [Parameter] public bool showReviewerPage { get; set; }
+    [Parameter] public bool showRolesPage { get; set; }
+}

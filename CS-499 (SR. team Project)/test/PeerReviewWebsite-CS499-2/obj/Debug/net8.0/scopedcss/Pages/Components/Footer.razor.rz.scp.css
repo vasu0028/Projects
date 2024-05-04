@@ -1,0 +1,27 @@
+footer[b-c18fua8flx] {
+    margin-top: 80px;
+    padding: 20px;
+    border: 20px;
+    background: #333;
+    bottom: 0;
+}
+
+p[b-c18fua8flx],span[b-c18fua8flx] {
+    color: white;
+}
+
+a:link[b-c18fua8flx] {
+    color: white;
+}
+
+a:visited[b-c18fua8flx] {
+    color: white;
+}
+
+a:hover[b-c18fua8flx] {
+    color: lightgray;
+}
+
+a:active[b-c18fua8flx] {
+    color: lightslategray;
+}

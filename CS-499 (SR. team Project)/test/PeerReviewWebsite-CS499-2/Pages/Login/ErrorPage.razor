@@ -1,0 +1,19 @@
+﻿@page "/error"
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@inject MyStateContainer state
+@inherits OwningComponentBase<AccountService>
+
+<body>
+    <h1> 404 Error Page </h1>
+
+    <p>Uh-oh, nothing here...</p>
+
+    @if (state.User == null)
+    {
+        <p>Return to Login...  <NavLink class="nav-link" href="login">Login</NavLink></p>
+    }else
+    {
+        <p>Return to Home...  <NavLink class="nav-link" href="home">Home</NavLink></p>
+    }
+</body>

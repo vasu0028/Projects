@@ -1,0 +1,40 @@
+﻿@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@inject MyStateContainer state
+@inject NavigationManager UriHelper
+@inherits OwningComponentBase<AccountService>
+
+@if (User is not null) {
+    if (User.Id == state.User.Id)
+    {
+        <a href="/profile" @onclick:preventDefault @onclick=GoToProfile><strong>@User.FirstName @User.LastName (You)</strong></a>
+    } else
+    {
+        <a href="/profile" @onclick:preventDefault @onclick=GoToProfile>@User.FirstName @User.LastName</a>
+    }
+}
+else {
+    <text>Loading...</text>
+}
+
+@code {
+    [Parameter]
+    public User User { get; set; } = null;
+    [Parameter]
+    public int UserId { get; set; }
+
+    protected override async Task OnInitializedAsync() {
+        if (User is null)
+            User = await Service.GetUserAsync(UserId);
+    }
+
+    private void GoToProfile () {
+        if (User.Id == state.User.Id)
+            UriHelper.NavigateTo("/profile", true);
+        else
+        {
+            state.VisitingUser = User;
+            UriHelper.NavigateTo("/profile/true", true);
+        }
+    }
+}

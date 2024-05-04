@@ -1,0 +1,27 @@
+﻿@page "/logout"
+
+@inherits OwningComponentBase<AccountService>
+@using System.Text.RegularExpressions;
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@inject MyStateContainer state
+@inject NavigationManager UriHelper
+
+<body>
+
+
+</body>
+
+@code {
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        
+        if (firstRender)
+        {
+            state.User = null;
+            UriHelper.NavigateTo("/");
+        }
+        
+    }
+}

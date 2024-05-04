@@ -1,0 +1,25 @@
+﻿li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+    li a:hover:not(.active) {
+        background-color: #D1CECD;
+    }
+
+.left {
+    float: left;
+    border-right: 1px solid #bbb;
+}
+
+.right {
+    float: right;
+    border-left: 1px solid #bbb;
+}
+
+.active {
+    background-color: #ABABAB;
+}

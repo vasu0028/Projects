@@ -1,0 +1,115 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = PeerReviewWebsite
+build_property.RootNamespace = PeerReviewWebsite
+build_property.ProjectDir = C:\Users\vasur\Desktop\T1\PeerReviewWebsite-CS499-2\PeerReviewWebsite-CS499-2\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\vasur\Desktop\T1\PeerReviewWebsite-CS499-2\PeerReviewWebsite-CS499-2
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TWFpbkxheW91dC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Components/RoleRequestPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50c1xSb2xlUmVxdWVzdFBhbmVsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Components/RoleTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50c1xSb2xlVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Components/UserLinkPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50c1xVc2VyTGlua1BhbmVsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Login/Logout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW5cTG9nb3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/EditRoles.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXEVkaXRSb2xlcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Components/DocumentLinkPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50c1xEb2N1bWVudExpbmtQYW5lbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-bffjmr452l
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Components/Footer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50c1xGb290ZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-c18fua8flx
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Components/NavigationBar.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50c1xOYXZpZ2F0aW9uQmFyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-oac9l86o2l
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Components/NavigationBarButton.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tcG9uZW50c1xOYXZpZ2F0aW9uQmFyQnV0dG9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-3efs0rfb2f
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Login/ErrorPage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW5cRXJyb3JQYWdlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-oddmjy42qy
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Login/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW5cTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-xchpeaultx
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Login/Register.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW5cUmVnaXN0ZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-dxyvdnolm4
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/Author.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXEF1dGhvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-qbw7yt42ku
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/Explore.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXEV4cGxvcmUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-0dbxjcv51i
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXEhvbWUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-6i01txlnrj
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/Moderator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXE1vZGVyYXRvci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-vw61np6n4h
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/Profile.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXFByb2ZpbGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-8yvkkq3gpj
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/Reviewer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXFJldmlld2VyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-81ots5ohuv
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/UserPages/Viewer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlclBhZ2VzXFZpZXdlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-8ekgknt683
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/Download/Download.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRG93bmxvYWRcRG93bmxvYWQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/vasur/Desktop/T1/PeerReviewWebsite-CS499-2/PeerReviewWebsite-CS499-2/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 

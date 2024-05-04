@@ -1,0 +1,56 @@
+.pdfViewer[b-8ekgknt683] {
+    border: 1px solid black;
+    direction: ltr;
+    width: 900px;
+    height: 1000px;
+    overflow: auto;
+    background: blue;
+}
+
+.txtViewer[b-8ekgknt683] {
+    border: 1px solid black;
+    direction: ltr;
+    width: 900px;
+    height: 1000px;
+    overflow: auto;
+    position: relative;
+}
+
+.pdfViewer > .page[b-8ekgknt683] {
+    margin: 30px, 0;
+}
+
+canvas[b-8ekgknt683] {
+    border: 1px solid black;
+}
+
+html[b-8ekgknt683],
+body[b-8ekgknt683] {
+    background-color: white;
+    height: fit-content;
+}
+
+.page[b-8ekgknt683] {
+    border: 1px solid black;
+}
+
+.column[b-8ekgknt683] {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.comment[b-8ekgknt683] {
+    border: 1px solid black;
+    margin: 10px;
+    padding: 10px;
+}
+
+.update[b-8ekgknt683] {
+    border: 1px solid black;
+    margin: 10px;
+    padding: 10px;
+}
+
+.multiline[b-8ekgknt683] {
+    white-space: pre-wrap;
+}

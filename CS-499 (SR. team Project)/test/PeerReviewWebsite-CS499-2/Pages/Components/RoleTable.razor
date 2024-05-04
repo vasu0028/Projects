@@ -1,0 +1,229 @@
+﻿@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@inject NavigationManager UriHelper
+@inject MyStateContainer state
+
+@inherits OwningComponentBase
+
+@if (createNewRole && role == null)
+{
+    <tr>
+        @if (string.IsNullOrEmpty(newRoleName))
+        {
+            <td>Add Name</td>
+        }
+        else
+        {
+            <td>@newRoleName</td>
+        }
+        <td><input type="checkbox" name="Read Only" @bind="readOnly"></td>
+        <td><input type="checkbox" name="Upload Document" @bind="canUploadDoc"></td>
+        <td><input type="checkbox" name="Upload Update" @bind="canUpdateDoc"></td>
+        <td><input type="checkbox" name="Review Document" @bind="canReviewDoc"></td>
+        <td><input type="checkbox" name="Approve Document" @bind="canApproveDoc"></td>
+        <td><input type="checkbox" name="Select Reviewers" @bind="canSelectReviewers"></td>
+        <td><input type="checkbox" name="Close Documents" @bind="canCloseDoc"></td>
+        <td><input type="checkbox" name="Comment" @bind="canComment"></td>
+        <td><input type="checkbox" name="Resolve Comments" @bind="canResolveComments"></td>
+        @if (isAdmin)
+        {
+            <td><input type="checkbox" name="Edit Roles" @bind="canEditRoles"></td>
+            <td><input type="checkbox" name="Manage Users" @bind="canManageUsers"></td>
+        }
+        <td><button type="button" @onclick=addNewRole @onclick:preventDefault>Save</button></td>
+    </tr>
+}
+else if (wantEdit)
+{
+    <tr>
+        <td>@role.Name</td>
+        <td><input type="checkbox" name="Read Only" @bind="readOnly"></td>
+        <td><input type="checkbox" name="Upload Document" @bind="canUploadDoc"></td>
+        <td><input type="checkbox" name="Upload Update" @bind="canUpdateDoc"></td>
+        <td><input type="checkbox" name="Review Document" @bind="canReviewDoc"></td>
+        <td><input type="checkbox" name="Approve Document" @bind="canApproveDoc"></td>
+        <td><input type="checkbox" name="Select Reviewers" @bind="canSelectReviewers"></td>
+        <td><input type="checkbox" name="Close Documents" @bind="canCloseDoc"></td>
+        <td><input type="checkbox" name="Comment" @bind="canComment"></td>
+        <td><input type="checkbox" name="Resolve Comments" @bind="canResolveComments"></td>
+        @if (isAdmin)
+        {
+            <td><input type="checkbox" name="Edit Roles" @bind="canEditRoles"></td>
+            <td><input type="checkbox" name="Manage Users" @bind="canManageUsers"></td>
+        }
+        <td><button type="button" @onclick=saveChanges>Save</button></td>
+        <td><button type="button" @onclick=@(() => toEdit(false))>Cancel</button></td>
+    </tr>
+}
+else
+{
+    @if (!(deleted))
+    {
+        <tr>
+            <td>@role.Name</td>
+            <td><label hidden="@(!readOnly)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canUploadDoc)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canUpdateDoc)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canReviewDoc)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canApproveDoc)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canSelectReviewers)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canCloseDoc)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canComment)"><i class="bi-check-lg"></i></label></td>
+            <td><label hidden="@(!canResolveComments)"><i class="bi-check-lg"></i></label></td>
+            @if (isAdmin || role.Id == 1)
+            {
+                <td><label hidden="@(!canEditRoles)"><i class="bi-check-lg"></i></label></td>
+                <td><label hidden="@(!canManageUsers)"><i class="bi-check-lg"></i></label></td>
+            }
+            @if (role.Id != 1)
+            {
+                <td><button type="button"><i class="bi-trash3-fill" @onclick=deleteRole></i> </button></td>
+                <td><button type="button" @onclick=@(() => toEdit(true))><i class="bi-pencil"></i> </button></td>
+            }
+            else
+            {
+                <td> </td>
+                <td> </td>
+            }
+
+        </tr>
+    }
+
+}
+
+@code {
+    [Parameter] public Role role { get; set; }
+    [Parameter] public bool isAdmin { get; set; }
+    [Parameter] public bool createNewRole { get; set; }
+    [Parameter] public string newRoleName { get; set; }
+
+    private AccountService AccountService { get; set; }
+
+    private bool wantEdit = false;
+    private bool deleted = false;
+    private bool readOnly;
+    private bool canUploadDoc;
+    private bool canUpdateDoc;
+    private bool canCloseDoc;
+    private bool canApproveDoc;
+    private bool canReviewDoc;
+    private bool canSelectReviewers;
+    private bool canComment;
+    private bool canResolveComments;
+    private bool canEditRoles;
+    private bool canManageUsers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+
+        if (role != null)
+        {
+            readOnly = await AccountService.DoesRoleHavePermission(role, Permission.ReadOnly);
+            canUploadDoc = await AccountService.DoesRoleHavePermission(role, Permission.UploadDocument);
+            canUpdateDoc = await AccountService.DoesRoleHavePermission(role, Permission.UpdateDocument);
+            canCloseDoc = await AccountService.DoesRoleHavePermission(role, Permission.CloseDocument);
+            canApproveDoc = await AccountService.DoesRoleHavePermission(role, Permission.ApproveDocument);
+            canReviewDoc = await AccountService.DoesRoleHavePermission(role, Permission.ReviewDocument);
+            canSelectReviewers = await AccountService.DoesRoleHavePermission(role, Permission.SelectReviewer);
+            canComment = await AccountService.DoesRoleHavePermission(role, Permission.Comment);
+            canResolveComments = await AccountService.DoesRoleHavePermission(role, Permission.ResolveComment);
+            canEditRoles = await AccountService.DoesRoleHavePermission(role, Permission.EditRoles);
+            canManageUsers = await AccountService.DoesRoleHavePermission(role, Permission.ManageUsers);
+        }
+    }
+
+    private void toEdit(bool wantToEdit)
+    {
+        if (wantToEdit)
+            wantEdit = true;
+        else
+            wantEdit = false;
+    }
+
+    private Permission getCheckedPermissions()
+    {
+        Permission newPermissions = new();
+
+        if (readOnly)
+            newPermissions |= Permission.ReadOnly;
+        if (canUploadDoc)
+            newPermissions |= Permission.UploadDocument;
+        if (canUpdateDoc)
+            newPermissions |= Permission.UpdateDocument;
+        if (canCloseDoc)
+            newPermissions |= Permission.CloseDocument;
+        if (canApproveDoc)
+            newPermissions |= Permission.ApproveDocument;
+        if (canReviewDoc)
+            newPermissions |= Permission.ReviewDocument;
+        if (canSelectReviewers)
+            newPermissions |= Permission.SelectReviewer;
+        if (canComment)
+            newPermissions |= Permission.Comment;
+        if (canResolveComments)
+            newPermissions |= Permission.ResolveComment;
+        if (canEditRoles)
+            newPermissions |= Permission.EditRoles;
+        if (canManageUsers)
+            newPermissions |= Permission.ManageUsers;
+
+        if (canUploadDoc | canReviewDoc)
+            newPermissions |= Permission.RequestClose;
+
+        return newPermissions;
+    }
+
+    private async Task saveChanges()
+    {
+        Role changedRole = await AccountService.GetRoleAsync(role.Id);
+        Permission newPermissions = getCheckedPermissions();
+
+        wantEdit = await AccountService.ChangeRolePermissions(changedRole, newPermissions);
+    }
+
+    private async Task deleteRole()
+    {
+        state.RoleIds.Remove(role.Id);
+        await removeRoleFromUsers();
+        deleted = await AccountService.DeleteRole(role);
+    }
+
+    private async Task removeRoleFromUsers()
+    {
+        foreach (int id in state.UserIds)
+        {
+            User user = await AccountService.GetUserAsync(id);
+            if (user == null)
+            {
+                state.UserIds.Remove(id);
+                continue;
+            }
+            else if (user.Roles.Contains(id))
+            {
+                user = await AccountService.RemoveRoleFromUser(user, role);
+                if (user.Id == state.User.Id)
+                    state.User = user;
+            }
+        }
+    }
+
+    private async Task addNewRole()
+    {
+        if (string.IsNullOrEmpty(newRoleName))
+            return;
+
+        Permission newPermissions = getCheckedPermissions();
+
+        Role newRole = await AccountService.GetRoleAsync(newRoleName);
+        newRole ??= await AccountService.CreateRoleAsync(new Role
+            {
+                Name = newRoleName,
+                Permissions = newPermissions
+            });
+        state.RoleIds.Add(newRole.Id);
+        // TODO: check if this can be done by StateHasChanged()
+        UriHelper.NavigateTo(UriHelper.Uri, true);
+    }
+}

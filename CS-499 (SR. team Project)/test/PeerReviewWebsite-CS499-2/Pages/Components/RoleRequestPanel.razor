@@ -1,0 +1,78 @@
+﻿@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Account.RoleRequest
+@inherits OwningComponentBase
+
+<td>
+    @if (User is null) {
+        <text>Loading...</text>
+    }
+    else {
+        <UserLinkPanel User=User />
+    }
+</td>
+
+<td>
+    @if (Role is null) {
+        <text>Loading...</text>
+    } else {
+        <text>@Role.Name</text>
+    }
+</td>
+
+<td><button type="button" @onclick=@(() => ApproveRoleRequest(RequestId)) style="margin-left:10px">Approve</button></td>
+<td><button type="button" @onclick=@(() => DenyRoleRequest(RequestId))>Deny</button></td>
+
+@code {
+    private AccountService AccountService;
+    private RequestService RequestService;
+
+    public User User { get; set; } = null;
+    [Parameter]
+    public int UserId { get; set; }
+
+    public Role Role { get; set; } = null;
+    [Parameter]
+    public int RoleId { get; set; }
+
+    [Parameter]
+    public int RequestId { get; set; }
+
+    // Used for repopulating the role request panels after removing one
+    [Parameter]
+    public Func<Task> OnChange { get; set; }
+
+    protected override void OnInitialized() {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        RequestService = ScopedServices.GetRequiredService<RequestService>();
+    }
+
+    // Components are reused by blazor so this is necessary to show the updated values
+    protected override async Task OnParametersSetAsync() {
+        User = null;
+        Role = null;
+        await GetFromIds();
+    }
+
+    private async Task GetFromIds() {
+        if (User is null)
+            User = await AccountService.GetUserAsync(UserId);
+
+        if (Role is null)
+            Role = await AccountService.GetRoleAsync(RoleId);
+    }
+
+    private async Task ApproveRoleRequest(int requestId) {
+        await RequestService.ApproveRoleRequest(requestId);
+        // Show a success message
+        Console.WriteLine("Role request approved!");
+        await OnChange(); // Refresh the list of role requests
+    }
+
+    private async Task DenyRoleRequest(int requestId) {
+        await RequestService.DenyRoleRequest(requestId);
+        // Show a success message
+        Console.WriteLine("Role request denied!");
+        await OnChange(); // Refresh the list of role requests
+    }
+}

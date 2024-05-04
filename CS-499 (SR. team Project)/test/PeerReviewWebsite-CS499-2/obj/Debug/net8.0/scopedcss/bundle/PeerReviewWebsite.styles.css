@@ -1,0 +1,261 @@
+/* _content/PeerReviewWebsite/Pages/Components/DocumentLinkPanel.razor.rz.scp.css */
+.doc[b-bffjmr452l] {
+    border: 1px solid black;
+    padding: 10px;
+    width: fit-content;
+}
+/* _content/PeerReviewWebsite/Pages/Components/Footer.razor.rz.scp.css */
+footer[b-c18fua8flx] {
+    margin-top: 80px;
+    padding: 20px;
+    border: 20px;
+    background: #333;
+    bottom: 0;
+}
+
+p[b-c18fua8flx],span[b-c18fua8flx] {
+    color: white;
+}
+
+a:link[b-c18fua8flx] {
+    color: white;
+}
+
+a:visited[b-c18fua8flx] {
+    color: white;
+}
+
+a:hover[b-c18fua8flx] {
+    color: lightgray;
+}
+
+a:active[b-c18fua8flx] {
+    color: lightslategray;
+}
+/* _content/PeerReviewWebsite/Pages/Components/NavigationBar.razor.rz.scp.css */
+ul[b-oac9l86o2l] {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+/* _content/PeerReviewWebsite/Pages/Components/NavigationBarButton.razor.rz.scp.css */
+li a[b-3efs0rfb2f] {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+    li a:hover:not(.active)[b-3efs0rfb2f] {
+        background-color: #D1CECD;
+    }
+
+.left[b-3efs0rfb2f] {
+    float: left;
+    border-right: 1px solid #bbb;
+}
+
+.right[b-3efs0rfb2f] {
+    float: right;
+    border-left: 1px solid #bbb;
+}
+
+.active[b-3efs0rfb2f] {
+    background-color: #ABABAB;
+}
+/* _content/PeerReviewWebsite/Pages/Login/ErrorPage.razor.rz.scp.css */
+h1[b-oddmjy42qy] {
+    text-align: center;
+}
+
+p[b-oddmjy42qy] {
+    text-align: center;
+}
+/* _content/PeerReviewWebsite/Pages/Login/Login.razor.rz.scp.css */
+h1[b-xchpeaultx] {
+    text-align: center;
+}
+
+body[b-xchpeaultx] {
+    height: 100vh;
+    margin: 0px 0px 0px 0px;
+    background-image: url("/BackgroundImgs/LoginBG.png");
+    background-position: center;
+    background-size: cover;
+    background-color: white;
+}
+
+button[b-xchpeaultx] {
+    background-color: #030804;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 50px;
+    margin: 7px auto;
+    width: 80%;
+    font-size: 12px;
+    text-align: center;
+    border: 2px white;
+}
+
+input[b-xchpeaultx] {
+    margin: auto;
+    border-radius: 5px;
+    padding: 14px 20px;
+    width: 80%;
+    box-sizing: border-box;
+    border: 2px white;
+}
+
+label[b-xchpeaultx] {
+    font-size: 18px;
+    color: whitesmoke;
+}
+
+.inputLabel[b-xchpeaultx] {
+    display: inline-block;
+    width: 370px;
+    text-align: left;
+}
+
+.errorLabel[b-xchpeaultx] {
+    color: #FF1300;
+    font-size: 15px;
+}
+
+form[b-xchpeaultx] {
+    width: 30rem;
+    margin: auto;
+    color: whitesmoke;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(60, 65, 65, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    text-align: center;
+}
+/* _content/PeerReviewWebsite/Pages/Login/Register.razor.rz.scp.css */
+
+h1[b-dxyvdnolm4] {
+    text-align: center;
+}
+
+h2[b-dxyvdnolm4] {
+    text-align: center;
+}
+
+button[b-dxyvdnolm4] {
+    background-color: #030804;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 50px;
+    margin: 7px auto;
+    width: 80%;
+    font-size: 12px;
+    text-align: center;
+    border: 2px white;
+}
+
+input[b-dxyvdnolm4] {
+    margin: auto;
+    border-radius: 5px;
+    padding: 14px 20px;
+    width: 80%;
+    box-sizing: border-box;
+    border: 2px white;
+}
+
+label[b-dxyvdnolm4] {
+    font-size: 18px;
+    color: whitesmoke;
+}
+
+.inputLabel[b-dxyvdnolm4] {
+    display: inline-block;
+    width: 430px;
+    text-align: left;
+}
+
+.errorLabel[b-dxyvdnolm4] {
+    color: #FF1300;
+    font-size: 15px;
+}
+
+form[b-dxyvdnolm4] {
+    width: 35rem;
+    margin: auto;
+    color: whitesmoke;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(60, 65, 65, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    text-align: center;
+}
+/* _content/PeerReviewWebsite/Pages/UserPages/Author.razor.rz.scp.css */
+
+/* _content/PeerReviewWebsite/Pages/UserPages/Explore.razor.rz.scp.css */
+
+/* _content/PeerReviewWebsite/Pages/UserPages/Home.razor.rz.scp.css */
+/* _content/PeerReviewWebsite/Pages/UserPages/Moderator.razor.rz.scp.css */
+/* _content/PeerReviewWebsite/Pages/UserPages/Profile.razor.rz.scp.css */
+/* _content/PeerReviewWebsite/Pages/UserPages/Reviewer.razor.rz.scp.css */
+/* _content/PeerReviewWebsite/Pages/UserPages/Viewer.razor.rz.scp.css */
+.pdfViewer[b-8ekgknt683] {
+    border: 1px solid black;
+    direction: ltr;
+    width: 900px;
+    height: 1000px;
+    overflow: auto;
+    background: blue;
+}
+
+.txtViewer[b-8ekgknt683] {
+    border: 1px solid black;
+    direction: ltr;
+    width: 900px;
+    height: 1000px;
+    overflow: auto;
+    position: relative;
+}
+
+.pdfViewer > .page[b-8ekgknt683] {
+    margin: 30px, 0;
+}
+
+canvas[b-8ekgknt683] {
+    border: 1px solid black;
+}
+
+html[b-8ekgknt683],
+body[b-8ekgknt683] {
+    background-color: white;
+    height: fit-content;
+}
+
+.page[b-8ekgknt683] {
+    border: 1px solid black;
+}
+
+.column[b-8ekgknt683] {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.comment[b-8ekgknt683] {
+    border: 1px solid black;
+    margin: 10px;
+    padding: 10px;
+}
+
+.update[b-8ekgknt683] {
+    border: 1px solid black;
+    margin: 10px;
+    padding: 10px;
+}
+
+.multiline[b-8ekgknt683] {
+    white-space: pre-wrap;
+}

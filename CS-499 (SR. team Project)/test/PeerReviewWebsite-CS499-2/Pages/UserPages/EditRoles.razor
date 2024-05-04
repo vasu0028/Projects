@@ -1,0 +1,125 @@
+﻿@page "/editroles"
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Review
+@using System.IO
+@using System.Diagnostics
+@using PeerReviewWebsite.Pages.Components
+@inject MyStateContainer state
+@inject IJSRuntime JSRuntime
+@inject NavigationManager UriHelper
+@inherits OwningComponentBase
+
+<PageTitle>Edit Roles</PageTitle>
+
+<body>
+    <NavigationBar activePage=NavigationBar.Page.Roles showModeratorPage=isModerator showAuthorPage=isAuthor showReviewerPage=isReviewer showRolesPage=true/>
+    <br /><br />  
+    <table style="text-align:center; vertical-align:middle;" border="1">
+            <tr>
+                <th> </th>
+                <th> Read Only </th>
+                <th> Upload Document </th>
+                <th> Upload Update </th>
+                <th> Review Document </th>
+                <th> Approve Document </th>
+                <th> Select Reviewers </th>
+                <th> Close Documents</th>
+                <th> Comment </th>
+                <th> Resolve Comments </th>
+                @if (isAdmin)
+                {
+                    <th> Edit Roles </th>
+                    <th> Manage Users </th>
+                }
+                <th> </th>
+                <th> </th>
+                
+            </tr>
+            @foreach (Role role in roles)
+            {
+                <RoleTable role=@role isAdmin=isAdmin createNewRole=false></RoleTable>
+            }
+        </table>
+
+        <br />
+        @if (createNewRole)
+        {
+            <button type="button" @onclick=@(() => wantNewRole(false))>Cancel</button>
+            <br />
+            <br />
+            <label>New Role Name:</label>
+            <input type="text" placeholder="Name" id="email" @bind-value=@newRoleName required>
+            <br>
+            <br>
+            <table style="text-align:center; vertical-align:middle;" border="1">
+                <tr>
+                    <th> </th>
+                    <th> Read Only </th>
+                    <th> Upload Document </th>
+                    <th> Upload Update </th>
+                    <th> Review Document </th>
+                    <th> Approve Document </th>
+                    <th> Select Reviewers </th>
+                    <th> Close Documents</th>
+                    <th> Comment </th>
+                    <th> Resolve Comments </th>
+                    @if (isAdmin)
+                    {
+                        <th> Edit Roles </th>
+                        <th> Manage Users </th>
+                    }
+                    <th> </th>
+                </tr>
+                <RoleTable role=null isAdmin=isAdmin createNewRole=true newRoleName=@newRoleName></RoleTable>
+            </table>
+        } else
+        {
+            <button type="button" @onclick=@(() => wantNewRole(true))>Create New Role</button>
+        }   
+
+
+</body>
+
+@code {
+    private AccountService AccountService { get; set; }
+    private ReviewService ReviewService { get; set; }
+
+    private List<Role> roles = new();
+    private string newRoleName;
+    private bool createNewRole;
+
+    private bool isAuthor;
+    private bool isReviewer;
+    private bool isModerator;
+    private bool isAdmin;
+    protected override async Task OnInitializedAsync()
+    {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        ReviewService = ScopedServices.GetRequiredService<ReviewService>();
+
+        isAuthor = await AccountService.UserIsAuthor(state.User);
+        isReviewer = await AccountService.UserIsReviewer(state.User);
+        isModerator = await AccountService.UserIsModerator(state.User);
+        isAdmin = await AccountService.UserIsAdmin(state.User);
+
+        await GetRoles();
+    }
+
+    private async Task GetRoles()
+    {
+        roles.Clear();
+        foreach (int id in state.RoleIds)
+            roles.Add(await AccountService.GetRoleAsync(id));
+    }
+
+    private void wantNewRole(bool addRole)
+    {
+        if (addRole)
+            createNewRole = true;
+        else
+            createNewRole = false;
+    }
+}

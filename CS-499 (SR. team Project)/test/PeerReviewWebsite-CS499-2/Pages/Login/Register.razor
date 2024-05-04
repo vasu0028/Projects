@@ -1,0 +1,198 @@
+﻿@page "/register"
+@using System.Text.RegularExpressions;
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@inject MyStateContainer myStateContainer
+@inject NavigationManager UriHelper
+@inherits OwningComponentBase<AccountService>
+
+<PageTitle>Register</PageTitle>
+
+<body>
+    <h1>Registration Form</h1>
+    <form @onsubmit=RegisterUser>
+        <div>
+            <h2>Create a New Account</h2>
+
+            <!--Account Exists: only appears if an account using the given email already exists-->
+            <label class="errorLabel" hidden="@(!accountMessage)">An account for with email already exists</label>
+
+            <!--Missing Info Error Message: only appears when text fields have been left empty-->
+            <label class="errorLabel" hidden="@(!infoMessage)">Information Missing! Please make sure to provide all information</label><br /><br />
+        </div>
+
+        <div>
+            <!-- First Name -->
+            <label class="inputLabel" id="FirstNameLabel">First Name:</label><br />
+            <input type="text" placeholder="First Name" id="firstname" @bind-value=@firstName required/>
+            <br />
+            <br />
+
+            <!-- Last Name -->
+            <label class="inputLabel" id="LastNameLabel">Last Name:</label>
+            <input type="text" placeholder="Last Name" id="lastname" @bind-value=@lastName required />
+            <br />
+            <br />
+
+            <!-- Email -->
+            <label class="inputLabel" id="EmailLabel">Email:</label>
+            <input type="email" placeholder="Email" id="email" @bind-value=@email required />
+            <br />
+            <br />
+
+            <!-- Password -->
+            <label class="inputLabel" id="PasswordLabel">Password:</label>
+            <input type="password" placeholder="Password" id="password" @bind-value=@password required />
+            <br />
+            <br />
+
+            <!-- Confirm Password -->
+            <label class="inputLabel" id="ConPasswordLabel">Confirm Password:</label>
+            <input type="password" placeholder="Confirm Password" id="conpassword" @bind-value=@conPassword required />
+            <br />
+            <br />
+
+            <!--Password Error Message: only appears when the password input does not match-->
+            <label class="errorLabel" id="pswordlabel" for="password" hidden="@(!pswrdMessage)">ERROR: Passwords didn't match</label>
+            <br />
+
+            <!--Email Error Message: only appears when email input d
+
+            oes not have a valid format-->
+            <label class="errorLabel" id="emaillabel" for="email" hidden="@(!emailMessage)">ERROR: Invalid Email</label>
+            <br />
+
+            <button type="submit" class="btn btn-primary">Create Account</button>
+            <br />
+            <p>Already have an account?  <NavLink class="nav-link" href="/">Login</NavLink></p>
+        </div>
+    </form>
+
+</body>
+
+@code {
+
+    private string firstName = "";
+    private string lastName = "";
+    private string email = "";
+    private string password = "";
+    private string conPassword = "";
+    bool pswrdMessage { get; set; } = false;
+    bool emailMessage { get; set; } = false;
+    bool infoMessage { get; set; } = false;
+    bool accountMessage { get; set; } = false;
+
+    /// <summary>
+    /// Checking that input is being properly grabbed
+    /// </summary>
+    private void PrintInput()
+    {
+        Console.WriteLine("First name entered was " + firstName);
+        Console.WriteLine("Last name entered was " + lastName);
+        Console.WriteLine("Email entered was " + email);
+        Console.WriteLine("Password entered was " + password);
+        Console.WriteLine("Confirm Password was " + conPassword);
+    }
+
+    /// <summary>
+    /// Registers the user to the database
+    /// </summary>
+    private async Task RegisterUser()
+    {
+        // Validate the given input
+        pswrdMessage = false;
+        emailMessage = false;
+        infoMessage = false;
+        accountMessage = false;
+        if (!FilledInput())
+        {
+            infoMessage = true;
+            return;
+        } else if (!ConfirmPassword())
+        {
+            pswrdMessage = true;
+            return;
+        }
+        else if (!ValidateEmail())
+        {
+            emailMessage = true;
+            return;
+        }
+
+        // Check that the user is not already in the system by email
+        User user = await Service.GetUserAsync(email);
+        if (user is not null)
+        {
+            accountMessage = true;
+            return;
+        }
+
+        // Save the new user's information to the database
+        user = await Service.CreateUserAsync(new User
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                Password = password
+            });
+        myStateContainer.User = user;
+
+        // Test creating and adding roles
+        Role role1 = await Service.CreateRoleAsync(new Role {
+            Name = "Documents Role",
+            Permissions = Permission.UploadDocument | Permission.UpdateDocument | Permission.UpdateDocument
+        });
+        Role role2 = await Service.CreateRoleAsync(new Role {
+            Name = "Comments Role",
+            Permissions = Permission.Comment | Permission.Respond | Permission.ResolveComment 
+        });
+        await Service.AddRoleToUserAsync(user, role1);
+        await Service.AddRoleToUserAsync(user, role1);
+        await Service.AddRoleToUserAsync(user, role2);
+
+        // Navigate to the new profile page
+        PrintInput();
+        UriHelper.NavigateTo($"/profile");
+    }
+
+    /// <summary>
+    /// Check that the Passwords match
+    /// </summary>
+    /// <returns>True if matching, false otherwise</returns>
+    private bool ConfirmPassword()
+    {
+        if (String.Equals(password, conPassword)) {
+            return true;
+        } else {
+            Console.WriteLine("Passwords did not match");
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///  Check that email input has valid email format
+    /// </summary>
+    /// <returns>True if it has valid format, false otherwise</returns>
+    private bool ValidateEmail()
+    {
+        string emailFormat = @"^([a-zA-Z])+[^@\s]+@([a-zA-Z])+\.[^@\s]+$";
+
+        if (Regex.IsMatch(email, emailFormat))
+        {
+            return true;
+        }
+        else  
+        {
+            Console.WriteLine("Invalid Email was entered");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Check that all information was filled
+    /// <summary>
+    /// <returns>False if input has not been given, true otherwise</returns>
+
+    private bool FilledInput() =>
+        firstName != "" && lastName != "" && email != "" && password != "";
+}

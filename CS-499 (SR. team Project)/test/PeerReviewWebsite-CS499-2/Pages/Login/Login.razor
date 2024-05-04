@@ -1,0 +1,67 @@
+﻿@page "/"
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@inject MyStateContainer myStateContainer
+@inject NavigationManager UriHelper
+@inherits OwningComponentBase<AccountService>
+
+<PageTitle>Login</PageTitle>
+
+<body>
+    <h1> Welcome to Online Peer Review! </h1>
+    <form @onsubmit=LogInUser>
+        <div>
+            <h1> Login </h1>
+        </div>
+
+        <div>
+            <!-- Add the Username & Password textfields and interative buttons-->
+            <label class="inputLabel" id="emailInputLabel">Email:</label><br />
+            <input type="text" placeholder="Email" id="email" @bind-value=@email required><br><br>
+            <label class="inputLabel" id="passwordInputLabel">Password:</label><br />
+            <input type="password" placeholder="Password" id="password" @bind-value=@password required><br><br>
+
+            <!--Error Message: only appears when the password input does not match-->
+            <label class="errorLabel" id="pswordlabel" hidden="@(!ShowMessage)">ERROR: Email or Password entered incorrectly</label><br />
+            
+
+            <button type="submit" class="btn btn-primary">Login</button><br>
+            <p>Don't have an account?  <NavLink class="nav-link" href="register">Register</NavLink></p>
+        </div>
+    </form>
+</body>
+
+@code {
+
+    public string email = "";
+    private string password = "";
+    bool ShowMessage { get; set; } = false; 
+
+    /// <summary>
+    /// Gets the user, if it exists, then logs them in
+    /// </summary>
+    private async Task LogInUser() {
+        User user = await Service.GetUserAsync(email);
+        if (user is null || user.Password != password) {
+            Console.WriteLine($"Could not find user with the given email: {email} or password was incorrect");
+            ShowMessage = true;
+            return;
+        }
+
+        Console.WriteLine("Found user!");
+        ShowMessage = false;
+        myStateContainer.User = user;
+        PrintInput();
+        UriHelper.NavigateTo($"/profile");
+    }
+
+    /// <summary>
+    /// Checking that input is being properly grabbed
+    /// </summary>
+    private void PrintInput()
+    {
+        Console.WriteLine("Email entered was " + email);
+        Console.WriteLine("Password entered was " + password);
+    }
+
+}

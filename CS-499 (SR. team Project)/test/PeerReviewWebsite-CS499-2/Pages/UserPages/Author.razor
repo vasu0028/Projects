@@ -1,0 +1,173 @@
+﻿@page "/author"
+
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Review
+@using System.IO
+@using System.Diagnostics
+@using PeerReviewWebsite.Pages.Components
+@inject MyStateContainer state
+@inject IJSRuntime JSRuntime
+@inject NavigationManager UriHelper
+@inherits OwningComponentBase
+
+<PageTitle>Author</PageTitle>
+
+<body>
+    <NavigationBar activePage=NavigationBar.Page.Author showModeratorPage=isModerator showAuthorPage=true showReviewerPage=isReviewer showRolesPage=canEditRoles />
+    <button disabled=@(tab == Tab.Upload) @onclick=@(() => tab = Tab.Upload)>Upload</button>
+    <button disabled=@(tab == Tab.Browse) @onclick=@(() => tab = Tab.Browse)>Browse</button>
+    <button disabled=@(tab == Tab.Trash) @onclick=@(() => tab = Tab.Trash)>Trash</button>
+
+    @if (tab == Tab.Upload) {
+        <form @onsubmit=UploadDocument>
+
+            <p>Title:</p>
+            <input type="text" placeholder="Title" @bind-value=title />
+
+            <p>Description:</p>
+            <textarea placeholder="Description" rows="5" cols="80" @bind=description />
+
+            <p>File:</p>
+            <InputFile accept=".txt, .pdf" OnChange=FileChanged />
+
+            <br /><br /><br />
+            <button class="submit" type="submit">Submit Document for Review</button>
+
+        </form>
+    }
+    else if (tab == Tab.Browse) {
+        <p>All Owned Documents</p>
+        <ul>
+            @foreach (Document doc in docs)
+            {
+                if (doc.Status != DocumentStatus.MovedToTrash && doc.Status != DocumentStatus.Deleted)
+                {
+                    <li><DocumentLinkPanel Document=doc DocumentList=docs canRemove=true canDelete=true /></li>
+                }
+            }
+        </ul>
+
+    } else if (tab == Tab.Trash)
+    {
+        <ul>
+            @foreach (Document doc in docs)
+            {
+                if (doc.Status == DocumentStatus.MovedToTrash && doc.Status != DocumentStatus.Deleted)
+                {
+                    <li><DocumentLinkPanel Document=doc DocumentList=docs canRemove=false canDelete=true /></li>
+                }
+            }
+
+        </ul>
+    }
+
+</body>
+
+<Footer />
+
+@code {
+    private enum Tab {
+        Upload,
+        Browse,
+        Trash
+    }
+    private Tab tab;
+
+    private AccountService AccountService { get; set; }
+    private ReviewService ReviewService { get; set; }
+
+    private List<string> validExtensions = new() { ".txt", ".pdf" };
+
+    private string title = null;
+    private string description = null;
+    private IBrowserFile file = null;
+
+    private List<Document> docs = new();
+
+    private bool isModerator;
+    private bool isReviewer;
+    private bool canEditRoles;
+    protected override async Task OnInitializedAsync()
+    {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        ReviewService = ScopedServices.GetRequiredService<ReviewService>();
+
+        isModerator = await AccountService.UserIsModerator(state.User);
+        isReviewer = await AccountService.UserIsReviewer(state.User);
+
+        canEditRoles = await AccountService.DoesUserHavePermission(state.User, Permission.EditRoles);
+
+        await PopulateDocs();
+    }
+
+    /// <summary>
+    /// Creates and uploads the document and attaches it to the user
+    /// </summary>
+    private async Task UploadDocument() {
+        if (!ValidateUploadInput())
+            return;
+
+        using Stream stream = file.OpenReadStream(int.MaxValue);
+        using MemoryStream memory = new();
+        await stream.CopyToAsync(memory);
+        byte[] bytes = memory.ToArray();
+
+        Document newDoc = await ReviewService.CreateDocumentAsync(new()
+        {
+            Title = title
+        });
+
+        DocumentUpdate initialUpdate = await ReviewService.CreateDocumentUpdateAsync(new()
+        {
+            FileName = file.Name,
+            Content = bytes,
+            UploadDate = DateTime.Now,
+            Description = description,
+            IsInitial = true
+        });
+
+        newDoc = await AccountService.AddUpdateToDocumentAsync(newDoc, initialUpdate);
+
+        state.User = await AccountService.AddDocumentToUserAsync(state.User, newDoc);
+        state.UploadedDocs.Add(newDoc.Id);
+        await PopulateDocs();
+    }
+
+    /// <summary>
+    /// Makes sure the input is valid
+    /// </summary>
+    /// <returns><see langword="true"/> if everything is fine for upload, <see langword="false"/> otherwise</returns>
+    private bool ValidateUploadInput() => !string.IsNullOrEmpty(title) &&
+                                          !string.IsNullOrEmpty(description) && 
+                                          !string.IsNullOrEmpty(file?.Name) &&
+                                          validExtensions.Contains(Path.GetExtension(file.Name));
+
+    /// <summary>
+    /// The function that monitors file choice changes
+    /// </summary>
+    /// <param name="e">The args of the event it is monitoring</param>
+    private void FileChanged(InputFileChangeEventArgs e) {
+        if (e.FileCount == 1)
+            file = e.File;
+    }
+
+    /// <summary>
+    /// Gets all the documents for the user so that they can be listed later synchronously
+    /// </summary>
+    private async Task PopulateDocs() {
+        docs.Clear();
+        foreach (int id in state.User.OwnedDocuments)
+            docs.Add(await ReviewService.GetDocumentAsync(id));
+    }
+
+    /// <summary>
+    /// Sets the state current document then opens the download in a new tab
+    /// </summary>
+    private async Task GotoDownload(Document doc) {
+        state.CurrentDoc = doc;
+        await JSRuntime.InvokeVoidAsync("open", "/download", "_blank");
+    }
+}

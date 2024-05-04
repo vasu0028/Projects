@@ -1,0 +1,57 @@
+
+h1[b-dxyvdnolm4] {
+    text-align: center;
+}
+
+h2[b-dxyvdnolm4] {
+    text-align: center;
+}
+
+button[b-dxyvdnolm4] {
+    background-color: #030804;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 50px;
+    margin: 7px auto;
+    width: 80%;
+    font-size: 12px;
+    text-align: center;
+    border: 2px white;
+}
+
+input[b-dxyvdnolm4] {
+    margin: auto;
+    border-radius: 5px;
+    padding: 14px 20px;
+    width: 80%;
+    box-sizing: border-box;
+    border: 2px white;
+}
+
+label[b-dxyvdnolm4] {
+    font-size: 18px;
+    color: whitesmoke;
+}
+
+.inputLabel[b-dxyvdnolm4] {
+    display: inline-block;
+    width: 430px;
+    text-align: left;
+}
+
+.errorLabel[b-dxyvdnolm4] {
+    color: #FF1300;
+    font-size: 15px;
+}
+
+form[b-dxyvdnolm4] {
+    width: 35rem;
+    margin: auto;
+    color: whitesmoke;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background-color: rgba(60, 65, 65, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    text-align: center;
+}

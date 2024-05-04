@@ -1,0 +1,38 @@
+﻿@page "/home"
+
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Pages.Components
+@inject MyStateContainer state
+@inherits OwningComponentBase<AccountService>
+
+<PageTitle>Home</PageTitle>
+
+<body>
+
+    <NavigationBar activePage=NavigationBar.Page.Home showModeratorPage=isModerator showAuthorPage=isAuthor showReviewerPage=isReviewer showRolesPage=canEditRoles/>
+
+    <h1> Home Page </h1>
+
+    <p>Here's where can put announcements and updates</p>
+
+</body>
+
+<Footer />
+
+@code {
+    private AccountService AccountService { get; set; }
+    private bool isModerator;
+    private bool isAuthor;
+    private bool isReviewer;
+    private bool canEditRoles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isModerator = await Service.UserIsModerator(state.User);
+        isAuthor = await Service.UserIsAuthor(state.User);
+        isReviewer = await Service.UserIsReviewer(state.User);
+
+        canEditRoles = await Service.DoesUserHavePermission(state.User, Permission.EditRoles);
+    }
+}

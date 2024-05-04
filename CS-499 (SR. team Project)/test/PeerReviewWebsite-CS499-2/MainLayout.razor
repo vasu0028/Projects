@@ -1,0 +1,105 @@
+﻿@inherits LayoutComponentBase
+@using System.Threading
+@using PeerReviewWebsite.Classes.Data
+@inject IJSRuntime JS
+@inject NavigationManager UriHelper
+@inject MyStateContainer state
+
+<main> @Body </main>
+
+<script>
+
+    let mousePosX = 0.0;
+    let mousePosY = 0.0;
+
+    function setupMouse() {
+    window.addEventListener("mousemove", (e) => {
+    mousePosX = e.clientX;
+    mousePosY = e.clientY;
+    })
+    }
+
+    function checkMouseX() {
+    return mousePosX;
+    }
+
+    function checkMouseY() {
+    return mousePosY;
+    }
+
+</script>
+
+@code
+{
+    int mouseX;
+    int mouseY;
+    int newMouseX;
+    int newMouseY;
+    int logoutCounter = 0;
+    PeriodicTimer mouseTimer = new(TimeSpan.FromMilliseconds(1000));
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("setupMouse");
+
+            while (await mouseTimer.WaitForNextTickAsync())
+            {
+                await CheckMouse();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    //Summary
+    //The CheckMouse() function invoked javascript calls to get the cursor's current position
+    //If the user doesn't move the mouse once a second, it increments a counter to initiate auto logout
+    //Summary
+    public async Task CheckMouse()
+    {
+
+        newMouseX = await JS.InvokeAsync<int>
+        ("checkMouseX");
+        newMouseY = await JS.InvokeAsync<int>
+        ("checkMouseY");
+
+        if (newMouseX != mouseX || newMouseY != mouseY)
+        {
+            logoutCounter = 0;
+            mouseX = newMouseX;
+            mouseY = newMouseY;
+        }
+        else
+        {
+            logoutCounter++;
+        }
+
+        //Check if current page shoulod be accesible by user, i.e. logged in
+        String currentPage = UriHelper.ToBaseRelativePath(UriHelper.Uri);
+
+        if (currentPage != "" && currentPage != "register" && currentPage != "error")
+        {
+            //If user is null (not logged in), user gets kicked to error page
+            if (state.User == null)
+            {
+                UriHelper.NavigateTo("/error");
+            } 
+        }
+
+
+        //If user doesn't move mouse in 10 minutes, logout the user
+        if (logoutCounter >= 600)
+        {
+            Logout();
+        }
+    }
+
+    public void Logout()
+    {
+        state.User = null;
+        UriHelper.NavigateTo("/");
+    }
+}

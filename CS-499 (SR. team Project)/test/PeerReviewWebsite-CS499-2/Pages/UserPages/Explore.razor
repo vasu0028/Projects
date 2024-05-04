@@ -1,0 +1,54 @@
+﻿@page "/explore"
+
+@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Review
+@using PeerReviewWebsite.Pages.Components
+@inject MyStateContainer state
+@inherits OwningComponentBase
+
+<PageTitle>Explore</PageTitle>
+
+<body>
+
+    <NavigationBar activePage=NavigationBar.Page.Explore showModeratorPage=isModerator showAuthorPage=isAuthor showReviewerPage=isReviewer showRolesPage=canEditRoles />
+    <h1> Explore Page </h1>
+
+    <ul>
+        @foreach (Document document in VisibleDocuments) {
+            <li><DocumentLinkPanel Document=document /></li>
+        }
+    </ul>
+
+</body>
+
+<Footer />
+
+@code {
+    private AccountService AccountService { get; set; }
+    private ReviewService ReviewService { get; set; }
+
+    private List<Document> VisibleDocuments = new();
+
+    private bool isModerator;
+    private bool isAuthor;
+    private bool isReviewer;
+    private bool canEditRoles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        ReviewService = ScopedServices.GetRequiredService<ReviewService>();
+
+        isModerator = await AccountService.UserIsModerator(state.User);
+        isAuthor = await AccountService.UserIsAuthor(state.User);
+        isReviewer = await AccountService.UserIsReviewer(state.User);
+
+        canEditRoles = await AccountService.DoesUserHavePermission(state.User, Permission.EditRoles);
+
+        // Only show approved documents, and only to users who have a role
+        if (state.User.Roles.Count > 0)
+            VisibleDocuments.AddRange((await ReviewService.GetAllDocumentsAsync()).Where(d => d.Status == DocumentStatus.Approved));
+    }
+}

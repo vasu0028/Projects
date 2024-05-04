@@ -1,0 +1,624 @@
+﻿@page "/viewer"
+
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Review
+@using System.IO
+@using System.Diagnostics
+@using System.Text
+@using PeerReviewWebsite.Pages.Components
+@inject MyStateContainer state
+@inject IJSRuntime JSRuntime
+@inject NavigationManager UriHelper
+@inherits OwningComponentBase
+
+<PageTitle>@state.CurrentDoc.Title</PageTitle>
+    <link rel="stylesheet" href="lib/pdfjs/web/viewer.css" />
+
+<body>
+
+    <NavigationBar activePage=NavigationBar.Page.Explore showModeratorPage=isModerator showAuthorPage=isAuthor showReviewerPage=isReviewer showRolesPage=canEditRoles/>
+    <br />
+    <p>Title: @state.CurrentDoc.Title</p>
+    <p>File: @(viewingUpdate?.FileName ?? "")</p>
+    <p>Author: <UserLinkPanel UserId=state.CurrentDoc.Author /></p>
+    <p>Description: @(viewingUpdate?.Description ?? "")</p>
+    <p>Document Status: @state.CurrentDoc.Status</p>
+    @if (state.CurrentDoc.Status == DocumentStatus.Denied)
+    {
+        <p>Reason for Denial: @state.CurrentDoc.AdditionalNotes</p>
+    }
+    @if (state.CurrentDoc.DocReviewers.Count != 0 && state.CurrentDoc.DocModerators.Count != 0)
+    {
+        <label>Assigned Reviewers: </label>
+        @foreach ((int id, int i) in state.CurrentDoc.DocReviewers.Select((item, i) => (item, i)))
+        {
+            <UserLinkPanel UserId=id />
+            if (i < state.CurrentDoc.DocReviewers.Count - 1)
+            {
+                <text>, </text>
+            }
+        }
+
+        <br />
+        <label>Assigned Moderators: </label>
+        foreach ((int id, int i) in state.CurrentDoc.DocModerators.Select((item, i) => (item, i)))
+        {
+            <UserLinkPanel UserId=id />
+            if (i < state.CurrentDoc.DocReviewers.Count - 1)
+            {
+                <text>, </text>
+            }
+        }
+    } else
+    {
+        <label>No Reviewers Assigned </label>
+        <br />
+        <label>No Moderators Assigned </label>
+        <br />
+    }
+    @if (state.CurrentDoc.RequestedClosed.Count != 0)
+    {
+        <br />
+        <label>Requested Close: </label>
+        foreach ((int id, int i) in state.CurrentDoc.RequestedClosed.Select((item, i) => (item, i)))
+        {
+            <UserLinkPanel UserId=id />
+            if (i < state.CurrentDoc.RequestedClosed.Count - 1)
+            {
+                <text>, </text>
+            }
+        }
+    }
+
+    <br />
+    <button type="button" @onclick=@(() => ChangeDocumentStatus(DocumentStatus.Approved)) hidden="@(!showElements)">Approve <i class="bi-check-lg"></i></button>
+    &ensp;
+    <!--Used hidden attribute to keep space between elements-->
+    <button type="button" @onclick=@(() => ChangeDocumentStatus(DocumentStatus.Denied)) hidden="@(!showElements)">Deny <i class="bi-x-lg"></i></button>
+
+    @if (state.CurrentDoc.Author != state.User.Id && approvingDocument)
+    {
+        // Only give reasoning if the document is being denied
+        if (state.CurrentDoc.Status == DocumentStatus.Denied && canApproveDocument && string.IsNullOrWhiteSpace(state.CurrentDoc.AdditionalNotes))
+        {
+            <br />
+            <br />
+            <label>Give Reason Why</label>
+            <br />
+            <textarea placeholder="Reasoning" rows="5" cols="80" @bind=reasoningText />
+            <button type="button" @onclick=GiveReasoning>Submit</button>
+        }
+
+        if (canSelectReviewers)
+        {
+            // Select reviewers if documnet is being approved
+            if (state.CurrentDoc.Status == DocumentStatus.Approved)
+            {
+                <br />
+                <br />
+                <label>Choose Reviewer for this Document:</label>
+                <br />
+                <text>&emsp;</text>
+                <input type="checkbox" checked=@selectAllReviewers @onchange=@(e => selectAllReviewers = (bool)e.Value) />
+                <text> Select All</text>
+                <br />
+                @foreach((User user, bool selected, int i) in possibleReviewers.Select((item, i) => (item.Item1, item.selected, i)))
+                {
+                    <text>&emsp;&emsp;</text>
+                    <input type="checkbox" checked=@possibleReviewers[i].selected @onchange=@(e => possibleReviewers[i] = (user, (bool)e.Value)) disabled=@selectAllReviewers />
+                    <UserLinkPanel User=user />
+                    <br />
+                }
+                <br />
+                <text>&emsp;</text>
+                <button @onclick=AssignReviewers disabled=@(!selectAllReviewers && !possibleReviewers.Any(pr => pr.selected))>Submit</button>
+            }
+        }
+    }
+
+    <br />
+    <br />
+    <div class="column">
+        <div>
+            <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+
+            <InputSelect @bind-Value=viewingUpdateId>
+                @foreach (DocumentUpdate update in updates) {
+                    <option selected=@(update == viewingUpdate) value=@update.Id>
+                        @update.UploadDate @update.FileName
+                    </option>
+                }
+            </InputSelect>
+
+            @if (canRequestClose && canRequest && (state.CurrentDoc.Status == DocumentStatus.Approved || state.CurrentDoc.Status == DocumentStatus.RequestClose) &&
+            !(requestedClose) && (state.CurrentDoc.DocReviewers.Count != 0 && state.CurrentDoc.DocModerators.Count != 0))
+            {
+                <button type="button" style="float: right;" @onclick=ResquestingClosed>Request Close </button>
+            }
+            @if (canCloseDocuments && closeDocument && !(DocumentFinished()) ||
+            (state.User.Id == state.CurrentDoc.Author && !(state.CurrentDoc.RequestedClosed.Contains(state.CurrentDoc.Author)) && !(DocumentFinished())))
+            {
+                if (state.User.Id == state.CurrentDoc.Author)
+                {
+                    <button type="button" style="float: right;" @onclick=@(() => ChangeDocumentStatus(DocumentStatus.Terminated))> Terminate Review</button>
+                } else
+                {
+                    <button type="button" style="float: right;" @onclick=@(() => ChangeDocumentStatus(DocumentStatus.Closed))> Close Review</button>
+                }      
+            }
+        </div>
+        <!-- One will be used, the other will be empty, based on file type-->
+        <div id="pagesDiv" class="pdfViewer"></div>
+        <p id="txtDiv" class="txtViewer"></p>
+    </div>
+
+    @if (canComment)
+    {
+        <div class="column">
+            @if (!(DocumentFinished()))
+        {
+            
+                @if (viewingUpdate?.Id == updates.LastOrDefault()?.Id)
+                {
+                    <form @onsubmit=UploadComment>
+                        <p>Comment:</p>
+                        <label>
+                            Highlight Text:
+                            <InputCheckbox @bind-Value=selectingHighlight />
+                        </label>
+                        <label>
+                            @if (selectingHighlight)
+                                @highlightText
+
+                        </label>
+                        @if (canResolveComments)
+                        {
+                            <br />
+                            <label>
+                                Needs Resolving:
+                                <InputCheckbox @bind-Value=needsResolving />
+                            </label>
+                        }
+                        <br />
+                        <textarea placeholder="Description" rows="5" cols="80" @bind=commentText />
+                        <br />
+                        @if (!selectingHighlight || (!string.IsNullOrEmpty(highlightText) && highlightRects is not null))
+                        {
+                            <button class="submit" type="submit">Post Comment</button>
+                        }
+                        else
+                        {
+                            <button class="submit" disabled>Post Comment</button>
+                        }
+
+                    </form>
+                }
+
+                <label>
+                    Show Needs Resolving:
+                    <InputCheckbox @bind-Value=showNeedsResolving />
+                </label>
+        }
+        @foreach ((User user, object thing, int i) in commentsAndUpdates.Select((item, index) => (item.Item1, item.Item2, index)))
+        {
+            switch (thing) {
+                case Comment comment:
+                    if (showNeedsResolving && (!comment.NeedsResolving || comment.Status == CommentStatus.Resolved))
+                        break;
+                    <div class="comment">
+                        @if (comment.NeedsResolving)
+                        {
+                            <p style="float: right">@(comment.Status == CommentStatus.Resolved ? "Resolved" : "Needs Resolving")</p>
+                        }
+                        <UserLinkPanel User=user />
+                        <br/>
+                        @if (comment.HasHighlight)
+                        {
+                            // @onclick:preventDefault prevents the href from activating since we are using custom behavior
+                            <a href="" @onclick:preventDefault @onclick=@(() => ShowCommentHighlight(comment))>> @comment.HighlightText</a>
+                            <br />
+                        }
+                        <p class="multiline">@comment.Content</p>
+                        @if (comment.NeedsResolving && user.Id == state.User.Id && comment.Status != CommentStatus.Resolved)
+                        {
+                            <button @onclick=@(() => ChangeCommentStatus(user, comment, i, CommentStatus.Resolved))>Resolve</button>
+                        }
+                    </div>
+                    break;
+                case DocumentUpdate update:
+                    if (showNeedsResolving)
+                        break;
+                    <div class="update">
+                        <p>@(update.IsInitial ? "Initial Document" : "Document Update")</p>
+                        <a href="" @onclick:preventDefault @onclick=@(() => ShowUpdate(update))>@update.Description</a>
+                    </div>
+                    break;
+            }
+        }
+        </div>
+
+        if ((state.User.Id == state.CurrentDoc.Author || canUpdateDoc ) && 
+        state.CurrentDoc.Status != DocumentStatus.RequestClose && !(DocumentFinished()))
+        {
+            <div class="column">
+                <form @onsubmit=UploadUpdate>
+                    <p>Update:</p>
+                    <textarea placeholder="Description" rows="5" cols="80" @bind=updateText />
+                    <br />
+                    <InputFile accept=".txt, .pdf" OnChange=FileChanged />
+                    <br />
+                    @if (!string.IsNullOrEmpty(updateText) && updateFile is not null)
+                    {
+                        <button class="submit" type="submit">Upload Update</button>
+                    }
+                    else
+                    {
+                        <button class="submit" disabled>Update Update</button>
+                    }
+                </form>
+            </div>
+        }
+    }
+
+</body>
+
+<Footer />
+
+
+@code {
+
+    private AccountService AccountService { get; set; }
+    private ReviewService ReviewService { get; set; }
+
+    private double scale = 1.25;
+    int[] idArray;
+
+    // comment + highlight
+    private static Viewer currentViewer = null; // needed since js callable functions are required as static
+    private bool selectingHighlight = false;
+    private bool needsResolving = false;
+    private bool showNeedsResolving = false;
+    private string commentText = "";
+    private string highlightText = "";
+    private string reasoningText = "";
+    private string reviewerIds = "";
+    private int highlightPage = 0;
+    private float[][] highlightRects = null;
+
+    // document update
+    private string updateText = "";
+    private IBrowserFile updateFile = null;
+    private DocumentUpdate viewingUpdate = null;
+    private int viewingUpdateId {
+        get => viewingUpdate?.Id ?? 0;
+        set => ShowUpdate(updates.First(u => u.Id == value));
+    }
+
+    private bool showElements { get; set; }
+    private bool approvingDocument { get; set; }
+    private bool requestedClose { get; set; }
+    private bool closeDocument { get; set; }
+    private bool canRequest { get; set; }
+    private bool getReviewer = true;
+    private bool foundReviewers = false;
+
+    private List<(User, IReviewItem)> commentsAndUpdates = new();
+    private List<DocumentUpdate> updates = new();
+    private List<(User, bool selected)> possibleReviewers = new();
+    private bool selectAllReviewers = true;
+    private List<string> errorMessages = new List<string>();
+
+    private bool isModerator;
+    private bool isAuthor;
+    private bool isReviewer;
+    private bool canSelectReviewers;
+    private bool canApproveDocument;
+    private bool canCloseDocuments;
+    private bool canRequestClose;
+    private bool canEditRoles;
+    private bool canComment;
+    private bool canResolveComments;
+    private bool canUpdateDoc;
+
+    private TaskCompletionSource WaitForInitializedToActuallyFinish = new TaskCompletionSource();
+    protected override async Task OnInitializedAsync()
+    {
+        currentViewer = this;
+
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        ReviewService = ScopedServices.GetRequiredService<ReviewService>();
+
+        isModerator = await AccountService.UserIsModerator(state.User);
+        isAuthor = await AccountService.UserIsAuthor(state.User);
+        isReviewer = await AccountService.UserIsReviewer(state.User);
+        canSelectReviewers = await AccountService.DoesUserHavePermission(state.User, Permission.SelectReviewer);
+        canApproveDocument = await AccountService.DoesUserHavePermission(state.User, Permission.ApproveDocument);
+        canCloseDocuments = await AccountService.DoesUserHavePermission(state.User, Permission.CloseDocument);
+        canRequestClose = await AccountService.DoesUserHavePermission(state.User, Permission.RequestClose);
+        canEditRoles = await AccountService.DoesUserHavePermission(state.User, Permission.EditRoles);
+        canComment = await AccountService.DoesUserHavePermission(state.User, Permission.Comment);
+        canResolveComments = await AccountService.DoesUserHavePermission(state.User, Permission.Comment);
+        canUpdateDoc = await AccountService.DoesUserHavePermission(state.User, Permission.UpdateDocument);
+
+        if (state.CurrentDoc.DocReviewers.Count == 0 && state.CurrentDoc.Author != state.User.Id && isModerator)
+        {
+            if (canApproveDocument)
+                showElements = true;
+            else
+                showElements = false;
+            approvingDocument = true;
+        }
+        else
+        {
+            showElements = false;
+            approvingDocument = false;
+        }
+
+        canRequest = canMakeRequest();
+        requestedClose = state.CurrentDoc.RequestedClosed.Contains(state.User.Id);
+        closeDocument = checkRequests(state.CurrentDoc);
+        await PopulateCommentsAndUpdates(false);
+        await PopulatePossibleReviewers();
+
+        WaitForInitializedToActuallyFinish.SetResult();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) {
+            await WaitForInitializedToActuallyFinish.Task;
+            await RenderDoc();
+        }
+    }
+
+    private async Task RenderDoc(bool withHighlight = false)
+    {
+        DocumentUpdate update = viewingUpdate;
+
+        switch (update.FileType)
+        {
+            case ".pdf":
+            {
+                byte[] data = update.Content;
+                string base64 = Convert.ToBase64String(data);
+                if (withHighlight)
+                    await JSRuntime.InvokeVoidAsync("renderPdfDoc", base64, scale, new { page = highlightPage, rects = highlightRects, scrollToPage = true });
+                else
+                    await JSRuntime.InvokeVoidAsync("renderPdfDoc", base64, scale);
+            } break;
+            case ".txt":
+            {
+                string text = Encoding.Default.GetString(update.Content);
+                if (withHighlight)
+                    await JSRuntime.InvokeVoidAsync("renderTxtDoc", text, new { page = highlightPage, rects = highlightRects, scrollToPage = true });
+                else
+                    await JSRuntime.InvokeVoidAsync("renderTxtDoc", text);
+            } break;
+        }
+    }
+
+    private async Task UploadComment()
+    {
+        Comment newComment = await ReviewService.CreateCommentAsync(new Comment
+        {
+            Content = commentText,
+            UploadDate = DateTime.Now,
+            DocumentUpdate = updates.Last().Id,
+            NeedsResolving = needsResolving,
+            HasHighlight = selectingHighlight,
+            HighlightText = highlightText,
+            HighlightPage = highlightPage,
+            HighlightRects = highlightRects
+        });
+
+        (state.User, state.CurrentDoc) = await AccountService.AddCommentToDocumentAsync(state.User, state.CurrentDoc, newComment);
+
+        commentText = "";
+        await PopulateCommentsAndUpdates(false);
+    }
+
+    private async Task UploadUpdate()
+    {
+        using Stream stream = updateFile.OpenReadStream(int.MaxValue);
+        using MemoryStream memory = new();
+        await stream.CopyToAsync(memory);
+        byte[] bytes = memory.ToArray();
+
+        DocumentUpdate newUpdate = await ReviewService.CreateDocumentUpdateAsync(new()
+        {
+            FileName = updateFile.Name,
+            Content = bytes,
+            Description = updateText,
+            UploadDate = DateTime.Now
+        });
+
+        state.CurrentDoc = await AccountService.AddUpdateToDocumentAsync(state.CurrentDoc, newUpdate);
+
+        updateText = "";
+        updateFile = null;
+        await PopulateCommentsAndUpdates();
+    }
+
+    /// <summary>
+    /// The function that monitors file choice changes for document upload
+    /// </summary>
+    /// <param name="e">The args of the event it is monitoring</param>
+    private void FileChanged(InputFileChangeEventArgs e) {
+        if (e.FileCount == 1)
+            updateFile = e.File;
+    }
+
+    private async Task PopulateCommentsAndUpdates(bool updateRender = true)
+    {
+        commentsAndUpdates.Clear();
+
+        foreach (int id in state.CurrentDoc.Comments)
+        {
+            Comment c = await ReviewService.GetCommentAsync(id);
+            User u = await AccountService.GetUserAsync(c.Author);
+            commentsAndUpdates.Add((u, c));
+        }
+
+        updates.Clear();
+        foreach (int id in state.CurrentDoc.Updates)
+        {
+            DocumentUpdate du = await ReviewService.GetDocumentUpdateAsync(id);
+            User u = await AccountService.GetUserAsync(state.CurrentDoc.Author);
+            commentsAndUpdates.Add((u, du));
+            updates.Add(du);
+        }
+        updates.Sort((x, y) => DateTime.Compare(x.UploadDate, y.UploadDate));
+        await ShowUpdate(updates.Last(), updateRender);
+
+        commentsAndUpdates.Sort((x, y) => DateTime.Compare(x.Item2.UploadDate, y.Item2.UploadDate));
+
+        StateHasChanged();
+    }
+
+    private async Task PopulatePossibleReviewers()
+    {
+        possibleReviewers.Clear();
+        foreach (User user in await AccountService.GetAllUsersAsync()) {
+            if (await AccountService.UserIsReviewer(user))
+                possibleReviewers.Add((user, true));
+        }
+    }
+
+    private bool DocumentFinished()
+    {
+        if (state.CurrentDoc.Status == DocumentStatus.Terminated ||
+            state.CurrentDoc.Status == DocumentStatus.Closed ||
+            state.CurrentDoc.Status == DocumentStatus.MovedToTrash)
+            return true;
+        return false;
+    }
+
+    private async Task ChangeDocumentStatus(DocumentStatus status)
+    {
+        state.CurrentDoc.Status = status;
+        state.CurrentDoc = await AccountService.ChangeDocumentStatus(state.CurrentDoc);
+    }
+
+    private async Task ChangeCommentStatus(User user, Comment comment, int index, CommentStatus status)
+    {
+        comment.Status = status;
+        commentsAndUpdates[index] = (user, await AccountService.ChangeCommentStatus(comment));
+    }
+
+    private async Task GiveReasoning()
+    {
+        state.CurrentDoc.AdditionalNotes = reasoningText + "  - " + state.User.FirstName + " " + state.User.LastName;
+        state.CurrentDoc = await AccountService.AddDocumentNotes(state.CurrentDoc);
+        showElements = false;
+    }
+
+    private async Task AssignReviewers()
+    {
+        state.CurrentDoc.DocModerators.Add(state.User.Id);
+        foreach ((User user, bool selected) in possibleReviewers) {
+            if (selected || selectAllReviewers)
+                state.CurrentDoc.DocReviewers.Add(user.Id);
+        }
+
+        state.CurrentDoc = await AccountService.AssignDocuments(state.CurrentDoc);
+        canRequest = canMakeRequest();
+        approvingDocument = false;
+        showElements = false;
+    }
+
+    private async Task ResquestingClosed()
+    {
+        state.CurrentDoc.RequestedClosed.Add(state.User.Id);
+        state.CurrentDoc = await AccountService.RequestClosed(state.CurrentDoc);
+        requestedClose = true;
+        closeDocument = checkRequests(state.CurrentDoc);
+        if (closeDocument)
+        {
+            await ChangeDocumentStatus(DocumentStatus.RequestClose);
+        }
+    }
+
+    private bool checkRequests(Document doc)
+    {
+
+        if (!(doc.RequestedClosed.Contains(doc.Author)))
+        {
+            Console.WriteLine("Author hasn't requested");
+            return false; // if the author hasn't requested close, return false
+        }
+        else if (doc.DocReviewers.Count >= 3)
+        {
+            // Else if at least half of the assign reviewers have requested close, return true
+            if (doc.RequestedClosed.Count > Math.Ceiling((doc.DocReviewers.Count + 1) / 2.0))
+            {
+                Console.WriteLine("More than half of the reviewers have requested close");
+                return true;
+            }
+
+        }
+        else if (doc.RequestedClosed.Count == doc.DocReviewers.Count + 1)
+        {
+            HashSet<int> requestsNeeded = new HashSet<int>(state.CurrentDoc.DocReviewers);
+            requestsNeeded.Add(state.CurrentDoc.Author);
+            // Check if all reviewers and author has requested close
+            if (requestsNeeded.SetEquals(doc.RequestedClosed))
+            {
+                Console.WriteLine("All reviewers have requested close");
+                return true;
+            }
+        }
+
+        Console.Write("Couldn't Close");
+        // Otherwise, return false
+        return false;
+    }
+
+    private bool canMakeRequest()
+    {
+        // Make sure the only ones that can request close are either Author or Reviewer
+        if (state.CurrentDoc.Author == state.User.Id)
+            return true;
+        else if (state.CurrentDoc.DocReviewers.Contains(state.User.Id))
+            return true;
+
+        return false;
+    }
+
+    private async Task ShowCommentHighlight(Comment comment) {
+        selectingHighlight = false;
+        highlightText = comment.HighlightText;
+        highlightPage = comment.HighlightPage;
+        highlightRects = comment.HighlightRects;
+        viewingUpdate = updates.First(u => u.Id == comment.Id);
+        await RenderDoc(true);
+    }
+
+    private async Task ShowUpdate(DocumentUpdate update, bool updateRender = true) {
+        viewingUpdate = update;
+        selectingHighlight = update.Id == updates.Last().Id ? selectingHighlight : false;
+        if (updateRender)
+            await RenderDoc();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public static Task<bool> IsHighlighting() => Task.FromResult(currentViewer?.selectingHighlight ?? false);
+
+    [JSInvokable]
+    public static Task SetHighlight(string text, int page, float[][] rects) {
+        if (currentViewer is null)
+            return Task.CompletedTask;
+
+        const int maxChars = 50;
+        currentViewer.highlightText = text.Length > maxChars ? (text[..maxChars] + "...") : text;
+        currentViewer.highlightPage = page;
+        currentViewer.highlightRects = rects;
+
+        currentViewer.StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+}

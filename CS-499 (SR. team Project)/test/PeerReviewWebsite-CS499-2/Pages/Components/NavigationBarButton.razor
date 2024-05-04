@@ -1,0 +1,33 @@
+﻿@using static PeerReviewWebsite.Pages.Components.NavigationBar
+@inject NavigationManager UriHelper
+
+<li class=@Class><a class=@GetClass() href=@GetPageUrl() @onclick:preventDefault @onclick=GoToPage><i class=@Icon></i> @Page</a></li>
+
+@code {
+    [Parameter]
+    public Page Page { get; set; }
+    [Parameter]
+    public Page ActivePage { get; set; }
+    [Parameter]
+    public string Class { get; set; }
+    [Parameter]
+    public string Icon { get; set; }
+
+    private string GetClass() => ActivePage == Page ? "active" : "";
+
+    private string GetPageUrl() => Page switch {
+        Page.Home => "/home",
+        Page.Explore => "/explore",
+        Page.Author => "/author",
+        Page.Reviewer => "/reviewer",
+        Page.Moderator => "/moderator",
+        Page.Roles => "/editroles",
+        Page.Profile => "/profile",
+        Page.LogOut => "/logout",
+        _ => "/error"
+    };
+
+    private void GoToPage() {
+        UriHelper.NavigateTo(GetPageUrl(), true);
+    }
+}

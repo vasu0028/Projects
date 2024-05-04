@@ -1,0 +1,25 @@
+li a[b-3efs0rfb2f] {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+    li a:hover:not(.active)[b-3efs0rfb2f] {
+        background-color: #D1CECD;
+    }
+
+.left[b-3efs0rfb2f] {
+    float: left;
+    border-right: 1px solid #bbb;
+}
+
+.right[b-3efs0rfb2f] {
+    float: right;
+    border-left: 1px solid #bbb;
+}
+
+.active[b-3efs0rfb2f] {
+    background-color: #ABABAB;
+}

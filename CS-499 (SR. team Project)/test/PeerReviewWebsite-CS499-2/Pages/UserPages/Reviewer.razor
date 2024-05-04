@@ -1,0 +1,84 @@
+﻿@page "/reviewer"
+
+@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Review
+@using PeerReviewWebsite.Pages.Components
+@inject MyStateContainer state
+@inherits OwningComponentBase<AccountService>
+@inject MyStateContainer state
+@inject IJSRuntime JSRuntime
+@inject NavigationManager UriHelper
+
+<PageTitle>Reviewer</PageTitle>
+
+<body>
+    <NavigationBar activePage=NavigationBar.Page.Reviewer showModeratorPage=isModerator showAuthorPage=isAuthor showReviewerPage=true showRolesPage=canEditRoles/>
+    <h1>Reviewer Page</h1>
+
+    <p> Documents to Review </p>
+    <ul>
+        @foreach (Document doc in assignedDocs)
+        {
+            if (doc.Status == DocumentStatus.Approved || doc.Status == DocumentStatus.RequestClose)
+            {
+                <li><DocumentLinkPanel Document=doc DocumentList=assignedDocs canRemove=false canDelete=false /></li>
+            }
+        }
+    </ul>
+
+</body>
+
+<Footer />
+
+@code {
+    private AccountService AccountService { get; set; }
+    private ReviewService ReviewService { get; set; }
+
+    private List<Document> docs = new();
+    private List<Document> assignedDocs = new();
+
+    private bool isModerator;
+    private bool isAuthor;
+    private bool canEditRoles;
+    protected override async Task OnInitializedAsync()
+    {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        ReviewService = ScopedServices.GetRequiredService<ReviewService>();
+
+        isModerator = await AccountService.UserIsModerator(state.User);
+        isAuthor = await AccountService.UserIsAuthor(state.User);
+        canEditRoles = await AccountService.DoesUserHavePermission(state.User, Permission.EditRoles);
+
+        await PopulateDocs();
+    }
+    /// <summary>
+    /// Gets all the documents for the user so that they can be listed later synchronously
+    /// </summary>
+    private async Task PopulateDocs()
+    {
+        docs.Clear();
+        docs.AddRange(await ReviewService.GetAllDocumentsAsync());
+        foreach (Document doc in docs)
+        {
+            if (doc.DocReviewers.Any(id => id == state.User.Id))
+                assignedDocs.Add(doc);
+        }
+    }
+
+    /// <summary>
+    /// Sets the state current document then opens the download in a new tab
+    /// </summary>
+    private async Task GotoDownload(Document doc)
+    {
+        state.CurrentDoc = doc;
+        await JSRuntime.InvokeVoidAsync("open", "/download", "_blank");
+    }
+
+    private void RenderDoc(Document doc)
+    {
+        state.CurrentDoc = doc;
+        UriHelper.NavigateTo($"/viewer");
+    }
+}

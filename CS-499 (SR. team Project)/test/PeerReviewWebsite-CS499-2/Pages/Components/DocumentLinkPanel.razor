@@ -1,0 +1,180 @@
+﻿@using Microsoft.Extensions.DependencyInjection
+@using PeerReviewWebsite.Classes.Data
+@using PeerReviewWebsite.Classes.Data.Account
+@using PeerReviewWebsite.Classes.Data.Review
+@inject MyStateContainer state
+@inject NavigationManager UriHelper
+@inherits OwningComponentBase
+
+<p class="doc">
+    @Document.Title
+    <button @onclick=GoToDoc>View</button>
+    <br />
+    Description:
+    @if (FirstUpdate is null) {
+        <text>Loading...</text>
+    }
+    else {
+        <text>@FirstUpdate.Description</text>
+    }
+    <br />
+    Uploaded: 
+    @if (FirstUpdate is null) {
+        <text>Loading...</text>
+    }
+    else {
+        <text>@FirstUpdate.UploadDate</text>
+    }
+    <br />
+    Last Updated:
+    @if (LastUpdate is null) {
+        <text>Loading...</text>
+    }
+    else {
+        <text>@LastUpdate.UploadDate</text>
+    }
+    <br />
+    Last Commented:
+    @if (LastComment is null) {
+        <text>No Comments</text>
+    }
+    else {
+        <text>@LastComment.UploadDate</text>
+    }
+    <br />
+    Author:
+    @if (Author is null) {
+        <text>Loading...</text>
+    }
+    else {
+        <UserLinkPanel User=Author />
+    }
+    <br />
+    Reviewers:
+    @if (Reviewers.Count == 0) {
+        <text>No Reviewers Assigned</text>
+    }
+    else {
+        foreach ((User reviewer, int i) in Reviewers.Select((item, i) => (item, i))) {
+            <UserLinkPanel User=reviewer />
+            @if (i < Reviewers.Count - 1) {
+                <text>, </text>
+            }
+        }
+    }
+    <br />
+    Status: @Document.Status
+    <br />
+    @if (canRemove)
+    {
+        <button @onclick=RemoveDoc>Move to Trash</button>
+    }
+    @if (canDelete)
+    {
+        <button @onclick=DeleteDoc>Delete</button>
+    }
+</p>
+
+@code {
+    [Parameter] public Document Document { get; set; }
+    [Parameter] public List<Document> DocumentList { get; set; }
+    [Parameter] public bool canRemove { get; set; }
+    [Parameter] public bool canDelete { get; set; }
+
+    AccountService AccountService;
+    ReviewService ReviewService;
+
+    private User Author = null;
+    private List<User> Reviewers = new();
+    private DocumentUpdate FirstUpdate = null;
+    private DocumentUpdate LastUpdate = null;
+    private Comment LastComment = null;
+
+    protected override async Task OnInitializedAsync() {
+        AccountService = ScopedServices.GetRequiredService<AccountService>();
+        ReviewService = ScopedServices.GetRequiredService<ReviewService>();
+
+        Author = await AccountService.GetUserAsync(Document.Author);
+        foreach (int reviewerId in Document.DocReviewers)
+            Reviewers.Add(await AccountService.GetUserAsync(reviewerId));
+
+        List<DocumentUpdate> updates = new();
+        foreach (int id in Document.Updates)
+            updates.Add(await ReviewService.GetDocumentUpdateAsync(id));
+        updates.Sort((x, y) => DateTime.Compare(x.UploadDate, y.UploadDate));
+
+        FirstUpdate = updates.First();
+        LastUpdate = updates.Last();
+
+        if (Document.Comments.Count > 0) {
+            List<Comment> comments = new();
+            foreach (int id in Document.Comments)
+                comments.Add(await ReviewService.GetCommentAsync(id));
+            comments.Sort((x, y) => DateTime.Compare(x.UploadDate, y.UploadDate));
+
+            LastComment = comments.Last();
+        }
+    }
+
+    private void GoToDoc() {
+        state.CurrentDoc = Document;
+        UriHelper.NavigateTo($"/viewer", true);
+    }
+
+    private async Task DeleteDoc()
+    {
+        Document.Status = DocumentStatus.Deleted;
+        Document = await AccountService.ChangeDocumentStatus(Document);
+
+        bool docDeleted = await AccountService.DeleteDocument(Document);
+        if (docDeleted)
+        {
+            foreach (int id in state.UserIds)
+            {
+                User user = await AccountService.GetUserAsync(id);
+                if (user == null)
+                    continue;
+
+                user = await OwnsComment(user, Document);
+                if (user.Id == state.User.Id)
+                    state.User = user;
+            }
+
+            foreach (int id in Document.Comments)
+            {
+                Comment comment = await ReviewService.GetCommentAsync(id);
+                if (comment == null)
+                    continue;
+
+                bool deletedCommnet = await AccountService.DeleteComment(comment);
+                if (!(deletedCommnet))
+                    continue;
+            }
+
+            if (state.User.Id == Document.Author)
+                state.User = await AccountService.RemoveDocFromOwner(state.User, Document);
+            DocumentList.Remove(Document);
+            state.UploadedDocs.Remove(Document.Id);
+            UriHelper.NavigateTo(UriHelper.Uri, true);
+        }
+    }
+
+    private async Task<User> OwnsComment(User user, Document doc)
+    {
+        foreach (int id in doc.Comments)
+        {
+            if (user.OwnedComments.Contains(id))
+            {
+                user = await AccountService.RemoveCommentFromUser(user, id);
+            }
+        }
+        return user;
+    }
+
+    private async Task RemoveDoc()
+    {
+        Document.Status = DocumentStatus.MovedToTrash;
+        Document = await AccountService.ChangeDocumentStatus(Document);
+        UriHelper.NavigateTo(UriHelper.Uri, true);
+    }
+}
