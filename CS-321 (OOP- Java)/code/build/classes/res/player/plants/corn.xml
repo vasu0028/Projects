@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/XML/XMLDocument.xml to edit this template
+-->
+
+
+
+<plant
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xsi:noNamespaceSchemaLocation='../plant_schema.xsd'>
+    <name>Corn</name>
+    <id></id>
+    <stackLimit>7</stackLimit>
+    <growthTime>20</growthTime>
+    <seed>
+        <cost>86</cost>
+        <rarity>0.3</rarity>
+        <minLevel>0</minLevel>
+        <sprite>4</sprite>
+    </seed>
+    <growthStages>
+       <sprite>corn/corn_1.png</sprite>
+       <sprite>corn/corn_2.png</sprite>
+       <sprite>corn/corn_3.png</sprite>
+        <sprite>corn/corn_4.png</sprite>
+        <sprite>corn/corn_5.png</sprite>
+        <sprite>corn/corn_6.png</sprite>
+        <sprite>corn/corn_7.png</sprite>
+        <sprite>corn/corn_8.png</sprite>
+        <sprite>corn/corn_9.png</sprite>
+        <sprite>corn/corn_10.png</sprite>
+        <sprite>corn/corn_11.png</sprite>
+        <sprite>corn/corn_12.png</sprite>
+        <sprite>corn/corn_13.png</sprite>
+        <sprite>corn/corn_14.png</sprite>
+        <sprite>corn/corn_15.png</sprite>
+        <sprite>corn/corn_16.png</sprite>
+        <sprite>corn/corn_17.png</sprite>
+        <sprite>corn/corn_18.png</sprite>
+        <sprite>corn/corn_19.png</sprite>
+        <sprite>corn/corn_20.png</sprite>
+    </growthStages>
+    <harvest>
+        <amount>6</amount>
+        <cropValue>54</cropValue>
+        <xp></xp>
+        <isDestroyed>False</isDestroyed>
+        <fallBackStage>15</fallBackStage>
+        <sprite></sprite>
+    </harvest>
+
+</plant>
+
